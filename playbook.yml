@@ -1,0 +1,44 @@
+
+---
+- hosts: debian
+  become: yes
+  tasks:
+    - name: Install Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'nginx', 'vim' ]
+      tags: [ 'setup' ]
+
+    - name: Copy website files to the server
+      copy: 
+        src: files/index.html
+        dest: /var/www/html
+        mode: preserve
+
+    - name: Copy nginx configuration for wordpress
+      template: 
+        src: files/default.conf 
+        dest: /etc/nginx/conf.d/default.conf
+      notify: Restart nginx
+
+    - name: Enable new site
+      file:
+        src: /etc/nginx/conf.d/default.conf
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      notify: Restart nginx
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    
+
+
+
+
+
+
+
+
